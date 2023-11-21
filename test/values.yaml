@@ -24,20 +24,24 @@ specs:
     kind: Service
     spec:
       type: ClusterIP
-  - apiVersion: apps/v1
-    kind: DaemonSet
-    spec:
-      template:
-        spec:
-          containers:
-            - name: foo
-            - name: bar
-              image: "foo:12"
+  # - apiVersion: apps/v1
+  #   kind: DaemonSet
+  #   spec:
+  #     template:
+  #       spec:
+  #         containers:
+  #           - name: foo
+  #           - name: bar
+  #             image: "foo:12"
   - apiVersion: apps/v1
     kind: Deployment
     spec:
       template:
         spec:
+          initContainers:
+            - name: foo
+            - name: bar
+              image: "foo:12"
           containers:
             - name: foo
             - name: bar
@@ -48,6 +52,7 @@ specs:
       template:
         spec:
           containers:
-            - name: foo
-            - name: bar
+            foo:
+              resources: {}
+            bar:
               image: "foo:12"

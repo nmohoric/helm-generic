@@ -44,3 +44,11 @@ specs: []
   #           - name: foo
   #           - name: bar
   #             image: "foo:12"
+  # - apiVersion: apps/v1
+  #   kind: StatefulSet
+  #   spec:
+  #     template:
+  #       spec:
+  #         containers:
+  #           bar:
+  #             image: "foo:12"

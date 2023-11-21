@@ -22,7 +22,11 @@ Pod container template
 {{- define "helm-generic.pod-container" -}}
 {{- $root := .root -}}
 {{- $container := .container -}}
+{{- $name := .name -}}
 
+{{- if and $name (not (hasKey $container "name")) -}}
+{{- $_ := set $container "name" $name -}}
+{{- end -}}
 {{- if not (hasKey $container "image") -}}
 {{- $_ := set $container "image" (include "helm-generic.pod-image-name" $root) -}}
 {{- end -}}
@@ -34,16 +38,26 @@ Pod container template
 {{- end -}}
 
 {{/*
-Overlay pod spec overlay
+Overlay container spec overlay
 */}}
 {{- define "helm-generic.pod-containers" -}}
 {{- $root := .root -}}
 {{- $spec := .spec -}}
-containers:
-{{- range $index, $container := $spec.containers }}
+{{- $key := .key -}}
+{{- $containers := (get $spec $key) -}}
+
+{{ $key }}:
+{{- if kindIs "map" $containers -}}
+{{- range $name, $container := $containers }}
+  - # placeholder for container {{ $name }}
+    {{- include "helm-generic.pod-container" (dict "root" $root "container" $container "name" $name) | fromYaml | toYaml | nindent 4 }}
+{{- end }}
+{{- else -}}
+{{- range $index, $container := $containers }}
   - # placeholder for container {{ $index }}
     {{- include "helm-generic.pod-container" (dict "root" $root "container" $container) | fromYaml | toYaml | nindent 4 }}
 {{- end }}
+{{- end -}}
 {{- end -}}
 
 {{/*
@@ -53,11 +67,16 @@ Generate the pod yaml resource
 {{- $root := .root -}}
 {{- $resource := deepCopy .spec -}}
 {{- $_ := set $resource "spec" (merge $resource.spec (include "helm-generic.pod-spec-overlay" $root | fromYaml)) -}}
-{{- $includeRootContainers := dict "root" $root "spec" (deepCopy $resource.spec) -}}
+{{- $specCopy := deepCopy $resource.spec -}}
 {{- $spec := $resource.spec -}}
-{{- $_ := unset $spec "containers" -}}
-{{- $containers := (include "helm-generic.pod-containers" $includeRootContainers | fromYaml) -}}
+
+{{- range $key := tuple "initContainers" "containers" -}}
+{{- if hasKey $spec $key -}}
+{{- $_ := unset $spec $key -}}
+{{- $containers := (include "helm-generic.pod-containers" (dict "root" $root "spec" $specCopy "key" $key) | fromYaml) -}}
 {{- $spec := mergeOverwrite $spec $containers -}}
+{{- end }}
+{{- end -}}
 
 {{- tpl (toYaml $spec) $root }}
 {{- end }}

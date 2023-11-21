@@ -9,13 +9,13 @@ template:
   metadata:
     {{- with .Values.podAnnotations }}
     annotations:
-      {{- toYaml . | nindent 8 }}
+      {{- toYaml . | nindent 6 }}
     {{- end }}
     labels:
-      {{- include "helm-generic.selectorLabels" . | nindent 8 }}
-      {{- include "helm-generic.commonLabels" . | nindent 4 }}
+      {{- include "helm-generic.selectorLabels" . | nindent 6 }}
+      {{- include "helm-generic.commonLabels" . | nindent 6 }}
       {{- with .Values.podLabels }}
-      {{- toYaml . | nindent 8 }}
+      {{- toYaml . | nindent 6 }}
       {{- end }}
 {{- end -}}
 
@@ -29,6 +29,7 @@ Generate the workload yaml resource
 
 {{- $includeRootPodSpec := dict "root" $root "spec" $resource.spec.template -}}
 {{- $podSpec := (include "helm-generic.pod-spec" $includeRootPodSpec | fromYaml) -}}
+{{- $_ := unset $resource.spec.template.spec "initContainers" -}}
 {{- $_ := unset $resource.spec.template.spec "containers" -}}
 {{- $_ := set $resource.spec.template "spec" (mustMerge $resource.spec.template.spec $podSpec) -}}
 {{- $spec := $resource.spec -}}
