@@ -1,0 +1,14 @@
+{{/*
+Generate the service yaml resource
+*/}}
+{{- define "helm-generic.service-spec" -}}
+{{- $root := .root -}}
+{{- $resource := deepCopy .spec -}}
+{{- $spec := omit $resource.spec "selector" -}}
+{{- tpl (toYaml $spec) $root }}
+selector:
+  {{- include "helm-generic.selectorLabels" $root | nindent 4 }}
+  {{- with $resource.spec.selector }}
+  {{- tpl (toYaml .) $root | nindent 2 }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,37 @@
+{{/*
+Overlay workload spec overlay
+*/}}
+{{- define "helm-generic.workload-spec-overlay" -}}
+selector:
+  matchLabels:
+    {{- include "helm-generic.selectorLabels" . | nindent 6 }}
+template:
+  metadata:
+    {{- with .Values.podAnnotations }}
+    annotations:
+      {{- toYaml . | nindent 8 }}
+    {{- end }}
+    labels:
+      {{- include "helm-generic.selectorLabels" . | nindent 8 }}
+      {{- include "helm-generic.commonLabels" . | nindent 4 }}
+      {{- with .Values.podLabels }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}
+
+{{/*
+Generate the workload yaml resource
+*/}}
+{{- define "helm-generic.workload-spec" -}}
+{{- $root := .root -}}
+{{- $resource := deepCopy .spec -}}
+{{- $_ := set $resource "spec" (mustMerge $resource.spec (include "helm-generic.workload-spec-overlay" $root | fromYaml)) -}}
+
+{{- $includeRootPodSpec := dict "root" $root "spec" $resource.spec.template -}}
+{{- $podSpec := (include "helm-generic.pod-spec" $includeRootPodSpec | fromYaml) -}}
+{{- $_ := unset $resource.spec.template.spec "containers" -}}
+{{- $_ := set $resource.spec.template "spec" (mustMerge $resource.spec.template.spec $podSpec) -}}
+{{- $spec := $resource.spec -}}
+
+{{- tpl (toYaml $spec) $root }}
+{{- end }}

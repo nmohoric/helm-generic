@@ -1,0 +1,53 @@
+# Test values for helm-generic.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# default image
+image:
+  repository: example
+  tag: 123-alpine
+
+# Labels to apply to all resources
+commonLabels:
+  common-foo: common-bar
+
+# Annotations and labels to apply to the pod spec
+podAnnotations:
+  pod-foo: pod-bar
+
+podLabels:
+  pod-foo: pod-bar
+
+## List of specs to deploy
+specs:
+  - apiVersion: v1
+    kind: Service
+    spec:
+      type: ClusterIP
+  - apiVersion: apps/v1
+    kind: DaemonSet
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+            - name: bar
+              image: "foo:12"
+  - apiVersion: apps/v1
+    kind: Deployment
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+            - name: bar
+              image: "foo:12"
+  - apiVersion: apps/v1
+    kind: StatefulSet
+    spec:
+      template:
+        spec:
+          containers:
+            - name: foo
+            - name: bar
+              image: "foo:12"

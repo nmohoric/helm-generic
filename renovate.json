@@ -1,0 +1,7 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "local>buildtools/renovate-configs//configs/post-upgrade",
+    "local>buildtools/renovate-configs//configs/helm"
+  ]
+}

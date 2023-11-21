@@ -1,0 +1,42 @@
+stages:
+  - lint
+  - create-tag
+  - publish
+
+before_script:
+  # start: fix gitlab-ci's umask 0000 issue
+  - umask 0022
+  - find . ! -path . ! -path './.git' ! -path './.git/*' -exec chmod go-w {} +
+  # end: fix gitlab-ci's umask 0000 issue
+
+helmlint:
+  stage: lint
+  image: $CI_REGISTRY/buildtools/kube-tools:latest
+  script:
+    - helm lint .
+
+kubeconform:
+  stage: lint
+  image: $CI_REGISTRY/buildtools/kube-tools:latest
+  script:
+    - |
+      helm template --namespace test --generate-name \
+        --values ./test/values.yaml \
+        . \
+        | kubeconform --summary --strict --ignore-missing-schemas
+
+publish:
+  stage: publish
+  image: $CI_REGISTRY/buildtools/kube-tools:latest
+  script:
+    - helm-release .
+  only:
+    - tags
+
+create-tag:
+  stage: create-tag
+  image: $CI_REGISTRY/buildtools/gitlab-tools:latest
+  script:
+    - create-tag-from-head --tag "v$(grep '^version:' Chart.yaml | awk '{print $2}')"
+  only:
+    - master
