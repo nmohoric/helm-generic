@@ -1,4 +1,4 @@
-{{- range $spec := .Values.specs -}}
+{{- range $spec := .Values.specs }}
 {{- $includeRoot := dict "root" $ "spec" $spec -}}
 apiVersion: {{ $spec.apiVersion }}
 kind: {{ $spec.kind }}
@@ -15,17 +15,21 @@ metadata:
     {{- end }}
   name: {{ default (include "helm-generic.fullname" $) $spec.name }}
   namespace: {{ $.Release.Namespace }}
-spec:
 {{- if and (eq $spec.apiVersion "v1") (eq $spec.kind "Service") }}
+spec:
   {{- include "helm-generic.service-spec" $includeRoot | nindent 2 }}
 {{- else if and (eq $spec.apiVersion "apps/v1") (eq $spec.kind "DaemonSet") }}
-  {{- include "helm-generic.workload-spec" $includeRoot | nindent 2 }}
+spec:
+  {{- tpl (include "helm-generic.workload-spec" $includeRoot) $ | nindent 2 }}
 {{- else if and (eq $spec.apiVersion "apps/v1") (eq $spec.kind "Deployment") }}
-  {{- include "helm-generic.workload-spec" $includeRoot | nindent 2 }}
+spec:
+  {{- tpl (include "helm-generic.workload-spec" $includeRoot) $ | nindent 2 }}
 {{- else if and (eq $spec.apiVersion "apps/v1") (eq $spec.kind "StatefulSet") }}
-  {{- include "helm-generic.statefulset-spec" $includeRoot | nindent 2 }}
+spec:
+  {{- tpl (include "helm-generic.statefulset-spec" $includeRoot) $ | nindent 2 }}
 {{- else }}
-  # Default case
+{{ tpl (toYaml (omit $spec "apiVersion" "kind" "metadata")) $ }}
 {{- end }}
+
 ---
-{{- end -}}
+{{- end }}

@@ -19,5 +19,5 @@ Generate the statefulset yaml resource
 
 {{- $spec := $resource.spec -}}
 
-{{- tpl (toYaml $spec) $root }}
+{{- toYaml $spec }}
 {{- end }}

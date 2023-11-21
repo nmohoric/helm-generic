@@ -34,7 +34,7 @@ Pod container template
 {{- $_ := set $container "imagePullPolicy" (default $root.Values.image.pullPolicy $container.imagePullPolicy) -}}
 {{- end -}}
 
-{{- tpl (toYaml $container) $root }}
+{{- toYaml $container }}
 {{- end -}}
 
 {{/*
@@ -78,5 +78,5 @@ Generate the pod yaml resource
 {{- end }}
 {{- end -}}
 
-{{- tpl (toYaml $spec) $root }}
+{{- toYaml $spec }}
 {{- end }}
