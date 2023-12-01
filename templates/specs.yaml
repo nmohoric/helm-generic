@@ -13,7 +13,7 @@ metadata:
     {{- with $spec.labels }}
     {{- tpl (toYaml .) $ | nindent 4 }}
     {{- end }}
-  name: {{ tpl (default (include "helm-generic.fullname" $) $spec.name) $ }}
+  name: {{ tpl (default (include "helm-generic.fullname" $) (default dict $spec.metadata).name) $ }}
   namespace: {{ $.Release.Namespace }}
 {{- if and (eq $spec.apiVersion "v1") (eq $spec.kind "Service") }}
 spec:

@@ -30,6 +30,8 @@ specs:
       foo: "{{ .Release.Name }}"
   - apiVersion: apps/v1
     kind: DaemonSet
+    metadata:
+      name: '{{ include "helm-generic.fullname" $ }}-foo'
     spec:
       template:
         spec:
