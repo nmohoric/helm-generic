@@ -33,6 +33,21 @@ publish:
   only:
     - tags
 
+publish:gitlabcom:
+  stage: publish
+  image: $CI_REGISTRY/buildtools/kube-tools:latest
+  script:
+    - '[[ -z "${GITLAB_COM_HELM_REGISTRY_IMAGE:-}" ]] && exit 0'
+    - '[[ -z "${GITLAB_COM_USERNAME:-}" ]] && exit 0'
+    - '[[ -z "${GITLAB_COM_PASSWORD:-}" ]] && exit 0'
+    - echo "${GITLAB_COM_PASSWORD}" | helm registry login -u "${GITLAB_COM_USERNAME}" --password-stdin registry.gitlab.com
+    - mkdir -p _helmws
+    - helm package --destination=_helmws .
+    - cd _helmws
+    - helm push ./*.tgz "oci://${GITLAB_COM_HELM_REGISTRY_IMAGE}"
+  only:
+    - tags
+
 create-tag:
   stage: create-tag
   image: $CI_REGISTRY/buildtools/gitlab-tools:latest
