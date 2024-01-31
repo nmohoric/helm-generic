@@ -64,3 +64,18 @@ specs:
               image: "{{ .Release.Name }}:foobar"
             bar:
               image: "foo:12"
+  - apiVersion: batch/v1
+    kind: CronJob
+    spec:
+      schedule: 0 8 * * *
+      jobTemplate:
+        spec:
+          template:
+            spec:
+              containers:
+                foo:
+                  resources: {}
+                tpl:
+                  image: "{{ .Release.Name }}:foobar"
+                bar:
+                  image: "foo:12"
