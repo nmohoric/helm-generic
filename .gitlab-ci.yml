@@ -1,17 +1,11 @@
 stages:
   - lint
-  - create-tag
   - release
 
 include:
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/lint-helm@main
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci@main
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci-gitlabcom@main
-
-create-tag:
-  stage: create-tag
-  image: $CI_REGISTRY/buildtools/gitlab-tools:latest
-  script:
-    - create-tag-from-head --tag "v$(grep '^version:' Chart.yaml | awk '{print $2}')"
-  only:
-    - master
+  - component: $CI_SERVER_HOST/buildtools/gitlab-tools/tag-release@main
+    inputs:
+      version-cmd: yq e .version Chart.yaml
