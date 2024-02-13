@@ -6,27 +6,13 @@ stages:
 include:
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/lint-helm@main
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci@main
+  - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci-gitlabcom@main
 
 before_script:
   # start: fix gitlab-ci's umask 0000 issue
   - umask 0022
   - find . ! -path . ! -path './.git' ! -path './.git/*' -exec chmod go-w {} +
   # end: fix gitlab-ci's umask 0000 issue
-
-publish:gitlabcom:
-  stage: release
-  image: $CI_REGISTRY/buildtools/kube-tools:latest
-  script:
-    - '[[ -z "${GITLAB_COM_HELM_REGISTRY_IMAGE:-}" ]] && exit 0'
-    - '[[ -z "${GITLAB_COM_USERNAME:-}" ]] && exit 0'
-    - '[[ -z "${GITLAB_COM_PASSWORD:-}" ]] && exit 0'
-    - echo "${GITLAB_COM_PASSWORD}" | helm registry login -u "${GITLAB_COM_USERNAME}" --password-stdin registry.gitlab.com
-    - mkdir -p _helmws
-    - helm package --destination=_helmws .
-    - cd _helmws
-    - helm push ./*.tgz "oci://${GITLAB_COM_HELM_REGISTRY_IMAGE}"
-  only:
-    - tags
 
 create-tag:
   stage: create-tag
