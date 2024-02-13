@@ -8,12 +8,6 @@ include:
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci@main
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci-gitlabcom@main
 
-before_script:
-  # start: fix gitlab-ci's umask 0000 issue
-  - umask 0022
-  - find . ! -path . ! -path './.git' ! -path './.git/*' -exec chmod go-w {} +
-  # end: fix gitlab-ci's umask 0000 issue
-
 create-tag:
   stage: create-tag
   image: $CI_REGISTRY/buildtools/gitlab-tools:latest
