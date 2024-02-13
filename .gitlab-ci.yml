@@ -1,10 +1,11 @@
 stages:
   - lint
   - create-tag
-  - publish
+  - release
 
 include:
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/lint-helm@main
+  - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci@main
 
 before_script:
   # start: fix gitlab-ci's umask 0000 issue
@@ -12,16 +13,8 @@ before_script:
   - find . ! -path . ! -path './.git' ! -path './.git/*' -exec chmod go-w {} +
   # end: fix gitlab-ci's umask 0000 issue
 
-publish:
-  stage: publish
-  image: $CI_REGISTRY/buildtools/kube-tools:latest
-  script:
-    - helm-release .
-  only:
-    - tags
-
 publish:gitlabcom:
-  stage: publish
+  stage: release
   image: $CI_REGISTRY/buildtools/kube-tools:latest
   script:
     - '[[ -z "${GITLAB_COM_HELM_REGISTRY_IMAGE:-}" ]] && exit 0'
