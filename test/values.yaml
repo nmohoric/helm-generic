@@ -65,6 +65,19 @@ specs:
             bar:
               image: "foo:12"
   - apiVersion: batch/v1
+    kind: Job
+    spec:
+      parallelism: 1
+      template:
+        spec:
+          containers:
+            foo:
+              resources: {}
+            tpl:
+              image: "{{ .Release.Name }}:foobar"
+            bar:
+              image: "foo:12"
+  - apiVersion: batch/v1
     kind: CronJob
     spec:
       schedule: 0 8 * * *
