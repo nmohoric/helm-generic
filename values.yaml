@@ -31,8 +31,15 @@ commonLabels: {}
 podAnnotations: {}
 podLabels: {}
 
+# default overlay to apply to all rendered pod specs
+defaultPodSpec: {}
+
+# default overlay to apply to all rendered container specs
+defaultContainerSpec: {}
+
 ## List of resources to deploy
-resources: []
+#  Can be a array or map
+resources: ~
   # - apiVersion: v1
   #   kind: Service
   #   spec:
@@ -54,3 +61,14 @@ resources: []
   #         containers:
   #           bar:
   #             image: "foo:12"
+
+## List of resources to skip the resource generation engine, but will will be
+#  templated with tpl and root values
+#  Can be a array or map
+rawResources: ~
+  # - apiVersion: v1
+  #   kind: Service
+  #   metadata:
+  #     name: my-service
+  #   spec:
+  #     type: ClusterIP

@@ -1,0 +1,11 @@
+{{- range $resourceIndex, $resource := .Values.rawResources }}
+{{- $root := deepCopy $ }}
+{{- $_ := set $root "_resourceIndex" $resourceIndex }}
+{{- $_ := set $root "resource" $resource }}
+
+{{- with $resource }}
+{{ tpl (. | toYaml) $root }}
+{{- end }}
+
+---
+{{- end }}

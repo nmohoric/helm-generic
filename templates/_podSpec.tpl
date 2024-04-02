@@ -40,6 +40,8 @@ Pod container template
 {{- $container := deepCopy ._container }}
 {{- $key := ._key }}
 
+{{- $container := mustMergeOverwrite dict $root.Values.defaultContainerSpec $container }}
+
 {{- $_ := set $container "name" (default $key $container.name) }}
 {{- $_ := set $container "image" (default (include "helm-generic.pod-container-image-name" $root) $container.image) }}
 
@@ -70,7 +72,7 @@ Generate the pod yaml resource
 {{- define "helm-generic.pod-resource" -}}
 {{- $root := . }}
 {{- $resource := deepCopy .resource }}
-{{- $_ := set $resource "spec" (mustMergeOverwrite (include "helm-generic.pod-spec-overlay" $root | fromYaml) $resource.spec) }}
+{{- $_ := set $resource "spec" (mustMergeOverwrite (include "helm-generic.pod-spec-overlay" $root | fromYaml) $root.Values.defaultPodSpec $resource.spec) }}
 
 {{- range $key := tuple "initContainers" "containers" }}
 {{- if hasKey $resource.spec $key }}

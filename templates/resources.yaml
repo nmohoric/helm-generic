@@ -6,8 +6,8 @@
 {{- range $loopKey, $loopValues := $resourceLoop }}
 
 {{- $root := deepCopy $ }}
-{{- $_ := set $root "_loopValues" $loopValues }}
 {{- $_ := set $root "_loopKey" $loopKey }}
+{{- $_ := set $root "_loopValues" $loopValues }}
 {{- $_ := set $root "_resourceIndex" $resourceIndex }}
 {{- $_ := set $root "resource" $resource }}
 {{- $_ := set $resource "metadata" (include "helm-generic.resource-metadata" $root | fromYaml) }}

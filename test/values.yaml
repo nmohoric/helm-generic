@@ -21,7 +21,17 @@ podAnnotations:
 podLabels:
   pod-foo: pod-bar
 
+# default overlay to apply to all rendered pod specs
+defaultPodSpec:
+  enableServiceLinks: false
+
+# default overlay to apply to all rendered container specs
+defaultContainerSpec:
+  securityContext:
+    runAsNonRoot: true
+
 ## List of specs to deploy
+#  Can be a array or map
 resources:
   - apiVersion: v1
     kind: Namespace
@@ -145,3 +155,15 @@ resources:
     _loop:
       - k: loopvar1
       - k: loopvar2
+
+## List of resources to skip the resource generation engine, but will will be
+#  templated with tpl and root values
+#  Can be a array or map
+rawResources:
+  srv:
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: my-service
+    spec:
+      type: ClusterIP
