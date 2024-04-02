@@ -5,6 +5,7 @@ stages:
 include:
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/lint-helm@main
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci@main
+  - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci-githubcom@main
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/release-helm-oci-gitlabcom@main
   - component: $CI_SERVER_HOST/buildtools/gitlab-tools/tag-release@main
     inputs:
