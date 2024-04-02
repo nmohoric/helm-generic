@@ -9,7 +9,7 @@ Since tooling like ArgoCD and Flux needs repositories to render loose kubernetes
 ## Installing the Chart
 
 ```bash
-helm install my-release --values my-values.yaml oci://REGISTRY_NAME/REPOSITORY_NAME/helm-generic
+helm install my-release --values my-values.yaml oci://ghcr.io/weikinhuang/helm-generic
 ```
 
 ## Usage
@@ -59,7 +59,7 @@ These a keys are available to use in the `.condition` key when using `.loop`. Th
 ### Resource Example
 
 ```bash
-helm template --namespace test --generate-name --values ./values.yaml oci://REGISTRY_NAME/REPOSITORY_NAME/helm-generic
+helm template --namespace test --generate-name --values ./values.yaml oci://ghcr.io/weikinhuang/helm-generic
 ```
 
 Example `values.yaml`:
