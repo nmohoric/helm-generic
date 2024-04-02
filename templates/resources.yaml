@@ -43,7 +43,9 @@ apiVersion: {{ $resource.apiVersion }}
 kind: {{ $resource.kind }}
 metadata:
   {{- $resource.metadata | toYaml | nindent 2 }}
-{{ tpl ($rest | toYaml) $root }}
+{{- with $rest }}
+{{ tpl (. | toYaml) $root }}
+{{- end }}
 
 ---
 {{- end }}

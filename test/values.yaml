@@ -24,6 +24,10 @@ podLabels:
 ## List of specs to deploy
 resources:
   - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: "{{ .Release.Namespace }}"
+  - apiVersion: v1
     kind: Service
     spec:
       type: ClusterIP
@@ -124,6 +128,7 @@ resources:
     kind: ConfigMap
     metadata:
       name: '{{ include "helm-generic.fullname" . }}-meta-ref'
+      namespace: ~
     data:
       meta-ref: "{{ .resource.metadata.name }}"
 
