@@ -22,6 +22,8 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# Annotations to apply to all resources
+commonAnnotations: {}
 # Labels to apply to all resources
 commonLabels: {}
 
@@ -29,8 +31,8 @@ commonLabels: {}
 podAnnotations: {}
 podLabels: {}
 
-## List of specs to deploy
-specs: []
+## List of resources to deploy
+resources: []
   # - apiVersion: v1
   #   kind: Service
   #   spec:

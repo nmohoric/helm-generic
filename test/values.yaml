@@ -7,6 +7,9 @@ image:
   repository: example
   tag: 123-alpine
 
+# Annotations to apply to all resources
+commonAnnotations:
+  common-anno: common-foo
 # Labels to apply to all resources
 commonLabels:
   common-foo: common-bar
@@ -19,7 +22,7 @@ podLabels:
   pod-foo: pod-bar
 
 ## List of specs to deploy
-specs:
+resources:
   - apiVersion: v1
     kind: Service
     spec:
@@ -28,10 +31,24 @@ specs:
     kind: ConfigMap
     data:
       foo: "{{ .Release.Name }}"
+  - apiVersion: v1
+    kind: Pod
+    spec:
+      initContainers:
+        tpl:
+          image: "{{ .Release.Name }}:foobar"
+        bar:
+          image: "foo:12"
+      containers:
+        - name: foo
+        - name: bar
+          image: "foo:12"
+      securityContext:
+        fsGroup: 2000
   - apiVersion: apps/v1
     kind: DaemonSet
     metadata:
-      name: '{{ include "helm-generic.fullname" $ }}-foo'
+      name: '{{ include "helm-generic.fullname" . }}-foo'
     spec:
       template:
         spec:
@@ -92,3 +109,34 @@ specs:
                   image: "{{ .Release.Name }}:foobar"
                 bar:
                   image: "foo:12"
+
+  # case: unset selector labels
+  - apiVersion: v1
+    kind: Service
+    spec:
+      type: ClusterIP
+      selector:
+        app: foo
+        app.kubernetes.io/name: ~
+
+  # case: metadata self-reference
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: '{{ include "helm-generic.fullname" . }}-meta-ref'
+    data:
+      meta-ref: "{{ .resource.metadata.name }}"
+
+  # case: loop and condition
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: '{{ include "helm-generic.fullname" . }}-{{ ._loopValues.k }}'
+    data:
+      foo: "{{ ._loopValues.k }}"
+      key2: |-
+        {{- .Files.Get "test/test-file.txt" | nindent 4 }}
+    _condition: "{{ eq ._loopKey 1 }}"
+    _loop:
+      - k: loopvar1
+      - k: loopvar2
