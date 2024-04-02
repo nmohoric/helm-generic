@@ -1,0 +1,53 @@
+{{- range $resourceIndex, $resource := .Values.resources }}
+{{- $resourceLoop := (default (tuple "") $resource._loop) }}
+{{- $condition := (default "true" $resource._condition) }}
+{{- $_ := unset $resource "_loop" }}
+{{- $_ := unset $resource "_condition" }}
+{{- range $loopKey, $loopValues := $resourceLoop }}
+
+{{- $root := deepCopy $ }}
+{{- $_ := set $root "_loopKey" $loopKey }}
+{{- $_ := set $root "_loopValues" $loopValues }}
+{{- $_ := set $root "_resourceIndex" $resourceIndex }}
+{{- $_ := set $root "resource" $resource }}
+{{- $_ := set $resource "metadata" (include "helm-generic.resource-metadata" $root | fromYaml) }}
+{{- $rest := dict }}
+
+{{- if eq (tpl $condition $root | toString) "true" }}
+
+{{/*
+START: Resource main spec
+*/}}
+{{- if and (eq $resource.apiVersion "v1") (eq $resource.kind "Service") }}
+{{- $rest = (include "helm-generic.service-resource" $root | fromYaml) }}
+{{- else if and (eq $resource.apiVersion "v1") (eq $resource.kind "Pod") }}
+{{- $rest = (include "helm-generic.pod-resource" $root | fromYaml) }}
+{{- else if and (eq $resource.apiVersion "apps/v1") (eq $resource.kind "DaemonSet") }}
+{{- $rest = (include "helm-generic.workload-resource" $root | fromYaml) }}
+{{- else if and (eq $resource.apiVersion "apps/v1") (eq $resource.kind "Deployment") }}
+{{- $rest = (include "helm-generic.workload-resource" $root | fromYaml) }}
+{{- else if and (eq $resource.apiVersion "apps/v1") (eq $resource.kind "StatefulSet") }}
+{{- $rest = (include "helm-generic.statefulset-resource" $root | fromYaml) }}
+{{- else if and (eq $resource.apiVersion "batch/v1") (eq $resource.kind "Job") }}
+{{- $rest = (include "helm-generic.job-resource" $root | fromYaml) }}
+{{- else if and (eq $resource.apiVersion "batch/v1") (eq $resource.kind "CronJob") }}
+{{- $rest = (include "helm-generic.cronjob-resource" $root | fromYaml) }}
+{{- else }}
+{{- $rest = omit $resource "apiVersion" "kind" "metadata" }}
+{{- end }}
+{{/*
+END: Resource main spec
+*/}}
+
+apiVersion: {{ $resource.apiVersion }}
+kind: {{ $resource.kind }}
+metadata:
+  {{- $resource.metadata | toYaml | nindent 2 }}
+{{- with $rest }}
+{{ tpl (. | toYaml) $root }}
+{{- end }}
+
+---
+{{- end }}
+{{- end }}
+{{- end }}

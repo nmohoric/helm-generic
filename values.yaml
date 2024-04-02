@@ -22,6 +22,8 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# Annotations to apply to all resources
+commonAnnotations: {}
 # Labels to apply to all resources
 commonLabels: {}
 
@@ -29,8 +31,15 @@ commonLabels: {}
 podAnnotations: {}
 podLabels: {}
 
-## List of specs to deploy
-specs: []
+# default overlay to apply to all rendered pod specs
+defaultPodSpec: {}
+
+# default overlay to apply to all rendered container specs
+defaultContainerSpec: {}
+
+## List of resources to deploy
+#  Can be a array or map
+resources: ~
   # - apiVersion: v1
   #   kind: Service
   #   spec:
@@ -52,3 +61,14 @@ specs: []
   #         containers:
   #           bar:
   #             image: "foo:12"
+
+## List of resources to skip the resource generation engine, but will will be
+#  templated with tpl and root values
+#  Can be a array or map
+rawResources: ~
+  # - apiVersion: v1
+  #   kind: Service
+  #   metadata:
+  #     name: my-service
+  #   spec:
+  #     type: ClusterIP
