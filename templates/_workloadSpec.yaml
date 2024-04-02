@@ -1,38 +1,28 @@
 {{/*
-Overlay workload spec overlay
+Default workload spec values
 */}}
 {{- define "helm-generic.workload-spec-overlay" -}}
 selector:
   matchLabels:
-    {{- include "helm-generic.selectorLabels" . | nindent 6 }}
+    {{- include "helm-generic.selectorLabels" . | nindent 4 }}
 template:
   metadata:
-    {{- with .Values.podAnnotations }}
-    annotations:
-      {{- toYaml . | nindent 6 }}
-    {{- end }}
-    labels:
-      {{- include "helm-generic.selectorLabels" . | nindent 6 }}
-      {{- include "helm-generic.commonLabels" . | nindent 6 }}
-      {{- with .Values.podLabels }}
-      {{- toYaml . | nindent 6 }}
-      {{- end }}
+    {{- include "helm-generic.pod-spec-metadata" . | nindent 4 }}
 {{- end -}}
 
 {{/*
 Generate the workload yaml resource
 */}}
-{{- define "helm-generic.workload-spec" -}}
-{{- $root := .root -}}
-{{- $resource := deepCopy .spec -}}
-{{- $_ := set $resource "spec" (mustMerge $resource.spec (include "helm-generic.workload-spec-overlay" $root | fromYaml)) -}}
+{{- define "helm-generic.workload-resource" -}}
+{{- $root := . }}
+{{- $resource := deepCopy .resource }}
+{{- $_ := set $resource "spec" (mustMergeOverwrite (include "helm-generic.workload-spec-overlay" $root | fromYaml) $resource.spec) }}
 
-{{- $includeRootPodSpec := dict "root" $root "spec" $resource.spec.template -}}
-{{- $podSpec := (include "helm-generic.pod-spec" $includeRootPodSpec | fromYaml) -}}
-{{- $_ := unset $resource.spec.template.spec "initContainers" -}}
-{{- $_ := unset $resource.spec.template.spec "containers" -}}
-{{- $_ := set $resource.spec.template "spec" (mustMerge $resource.spec.template.spec $podSpec) -}}
-{{- $spec := $resource.spec -}}
+{{- $podPassthroughRoot := deepCopy (omit $root "resource") }}
+{{- $_ := set $podPassthroughRoot "resource" $resource.spec.template }}
+{{- $podSpec := (include "helm-generic.pod-resource" $podPassthroughRoot | fromYaml) }}
+{{- $_ := set $resource.spec.template "spec" $podSpec.spec }}
 
-{{- tpl (toYaml $spec) $root }}
-{{- end }}
+spec:
+  {{- $resource.spec | toYaml | nindent 2 }}
+{{- end -}}

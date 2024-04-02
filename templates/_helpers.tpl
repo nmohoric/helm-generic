@@ -72,3 +72,29 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Spec metadata
+*/}}
+{{- define "helm-generic.resource-metadata" -}}
+{{- $root := . }}
+{{- $metadata := (default dict .resource.metadata) }}
+
+{{- with (mustMerge dict (default dict $metadata.annotations) (default dict $root.Values.commonAnnotations)) }}
+annotations:
+  {{- . | toYaml | nindent 2 }}
+{{- end }}
+labels:
+  {{- include "helm-generic.labels" $root | nindent 2 }}
+  {{- include "helm-generic.commonLabels" $root | nindent 2 }}
+  {{- with $metadata.labels }}
+  {{- . | toYaml | nindent 2 }}
+  {{- end }}
+
+name: {{ default (include "helm-generic.fullname" $root) (default dict $metadata).name }}
+namespace: {{ default $root.Release.Namespace (default dict $metadata).namespace }}
+
+{{- with (omit $metadata "annotations" "labels" "name" "namespace") }}
+{{ . | toYaml }}
+{{- end }}
+{{- end }}

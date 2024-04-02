@@ -1,23 +1,23 @@
 {{/*
-Overlay cronjob spec overlay
+Default cronjob spec values
 */}}
 {{- define "helm-generic.cronjob-spec-overlay" -}}
-jobTemplate:
-  spec: {}
+jobTemplate: {}
 {{- end -}}
 
 {{/*
 Generate the cronjob yaml resource
 */}}
-{{- define "helm-generic.cronjob-spec" -}}
-{{- $root := .root -}}
-{{- $resource := deepCopy .spec -}}
-{{- $_ := set $resource "spec" (mustMerge $resource.spec (include "helm-generic.cronjob-spec-overlay" $root | fromYaml)) -}}
+{{- define "helm-generic.cronjob-resource" -}}
+{{- $root := . }}
+{{- $resource := deepCopy .resource }}
+{{- $_ := set $resource "spec" (mustMergeOverwrite (include "helm-generic.cronjob-spec-overlay" $root | fromYaml) $resource.spec) }}
 
-{{- $includeRootJobSpec := dict "root" $root "spec" $resource.spec.jobTemplate -}}
-{{- $jobSpec := (include "helm-generic.job-spec" $includeRootJobSpec | fromYaml) -}}
-{{- $_ := set $resource.spec.jobTemplate "spec" $jobSpec -}}
-{{- $spec := $resource.spec -}}
+{{- $jobPassthroughRoot := deepCopy (omit $root "resource") }}
+{{- $_ := set $jobPassthroughRoot "resource" $resource.spec.jobTemplate }}
+{{- $jobSpec := (include "helm-generic.job-resource" $jobPassthroughRoot | fromYaml) }}
+{{- $_ := set $resource.spec "jobTemplate" $jobSpec }}
 
-{{- tpl (toYaml $spec) $root }}
-{{- end }}
+spec:
+  {{- $resource.spec | toYaml | nindent 2 }}
+{{- end -}}

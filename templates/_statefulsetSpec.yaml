@@ -1,5 +1,5 @@
 {{/*
-Overlay statefulset spec overlay
+Default statefulset spec values
 */}}
 {{- define "helm-generic.statefulset-spec-overlay" -}}
 replicas: 1
@@ -9,15 +9,15 @@ serviceName: {{ include "helm-generic.fullname" . }}
 {{/*
 Generate the statefulset yaml resource
 */}}
-{{- define "helm-generic.statefulset-spec" -}}
-{{- $root := .root -}}
-{{- $resource := deepCopy .spec -}}
-{{- $includeRoot := dict "root" $root "spec" $resource -}}
-{{- $_ := set $resource "spec" (include "helm-generic.workload-spec" $includeRoot | fromYaml) -}}
+{{- define "helm-generic.statefulset-resource" -}}
+{{- $root := . }}
+{{- $resource := deepCopy .resource }}
+{{- $_ := set $resource "spec" (mustMergeOverwrite (include "helm-generic.statefulset-spec-overlay" $root | fromYaml) $resource.spec) }}
 
-{{- $_ := set $resource "spec" (mustMerge $resource.spec (include "helm-generic.statefulset-spec-overlay" $root | fromYaml)) -}}
+{{- $workloadPassthroughRoot := deepCopy (omit $root "resource") }}
+{{- $_ := set $workloadPassthroughRoot "resource" $resource }}
+{{- $resource := (include "helm-generic.workload-resource" $workloadPassthroughRoot | fromYaml) }}
 
-{{- $spec := $resource.spec -}}
-
-{{- toYaml $spec }}
-{{- end }}
+spec:
+  {{- $resource.spec | toYaml | nindent 2 }}
+{{- end -}}

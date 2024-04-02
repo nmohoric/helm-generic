@@ -1,18 +1,34 @@
 {{/*
-Overlay pod spec overlay
+Default pod metadata
+*/}}
+{{- define "helm-generic.pod-spec-metadata" -}}
+{{- with (mustMerge dict (default dict .Values.podAnnotations) (default dict .Values.commonAnnotations)) }}
+annotations:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+labels:
+  {{- include "helm-generic.selectorLabels" . | nindent 2 }}
+  {{- include "helm-generic.commonLabels" . | nindent 2 }}
+  {{- with .Values.podLabels }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end -}}
+
+{{/*
+Default pod spec values
 */}}
 {{- define "helm-generic.pod-spec-overlay" -}}
 {{- with .Values.imagePullSecrets }}
 imagePullSecrets:
-  {{- toYaml . | nindent 8 }}
+  {{- . | toYaml | nindent 2 }}
 {{- end }}
 serviceAccountName: {{ include "helm-generic.serviceAccountName" . }}
 {{- end -}}
 
 {{/*
-Pod image name
+Default image name
 */}}
-{{- define "helm-generic.pod-image-name" -}}
+{{- define "helm-generic.pod-container-image-name" -}}
 {{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}
 {{- end -}}
 
@@ -20,63 +36,54 @@ Pod image name
 Pod container template
 */}}
 {{- define "helm-generic.pod-container" -}}
-{{- $root := .root -}}
-{{- $container := .container -}}
-{{- $name := .name -}}
+{{- $root := omit . "_container" "_key" }}
+{{- $container := deepCopy ._container }}
+{{- $key := ._key }}
 
-{{- if and $name (not (hasKey $container "name")) -}}
-{{- $_ := set $container "name" $name -}}
-{{- end -}}
-{{- if not (hasKey $container "image") -}}
-{{- $_ := set $container "image" (include "helm-generic.pod-image-name" $root) -}}
-{{- end -}}
-{{- if not (hasKey $container "imagePullPolicy") -}}
-{{- $_ := set $container "imagePullPolicy" (default $root.Values.image.pullPolicy $container.imagePullPolicy) -}}
-{{- end -}}
+{{- $_ := set $container "name" (default $key $container.name) }}
+{{- $_ := set $container "image" (default (include "helm-generic.pod-container-image-name" $root) $container.image) }}
 
 {{- toYaml $container }}
 {{- end -}}
 
 {{/*
-Overlay container spec overlay
+Overlay container spec
 */}}
 {{- define "helm-generic.pod-containers" -}}
-{{- $root := .root -}}
-{{- $spec := .spec -}}
-{{- $key := .key -}}
-{{- $containers := (get $spec $key) -}}
+{{- $root := omit . "_containers" }}
+{{- $containers := ._containers }}
 
-{{ $key }}:
-{{- if kindIs "map" $containers -}}
-{{- range $name, $container := $containers }}
-  - # placeholder for container {{ $name }}
-    {{- include "helm-generic.pod-container" (dict "root" $root "container" $container "name" $name) | fromYaml | toYaml | nindent 4 }}
+containers:
+{{- range $key, $container := $containers }}
+  {{- $passthroughRoot := deepCopy $root }}
+  {{- $_ := set $passthroughRoot "_container" $container }}
+  {{- $_ := set $passthroughRoot "_key" $key }}
+
+  - # placeholder for container {{ $key }}
+    {{- include "helm-generic.pod-container" $passthroughRoot | nindent 4 }}
 {{- end }}
-{{- else -}}
-{{- range $index, $container := $containers }}
-  - # placeholder for container {{ $index }}
-    {{- include "helm-generic.pod-container" (dict "root" $root "container" $container) | fromYaml | toYaml | nindent 4 }}
-{{- end }}
-{{- end -}}
 {{- end -}}
 
 {{/*
 Generate the pod yaml resource
 */}}
-{{- define "helm-generic.pod-spec" -}}
-{{- $root := .root -}}
-{{- $resource := deepCopy .spec -}}
-{{- $_ := set $resource "spec" (merge $resource.spec (include "helm-generic.pod-spec-overlay" $root | fromYaml)) -}}
-{{- $specCopy := deepCopy $resource.spec -}}
-{{- $spec := $resource.spec -}}
+{{- define "helm-generic.pod-resource" -}}
+{{- $root := . }}
+{{- $resource := deepCopy .resource }}
+{{- $_ := set $resource "spec" (mustMergeOverwrite (include "helm-generic.pod-spec-overlay" $root | fromYaml) $resource.spec) }}
 
-{{- range $key := tuple "initContainers" "containers" -}}
-{{- if hasKey $spec $key -}}
-{{- $_ := unset $spec $key -}}
-{{- $containers := (include "helm-generic.pod-containers" (dict "root" $root "spec" $specCopy "key" $key) | fromYaml) -}}
-{{- $spec := mergeOverwrite $spec $containers -}}
+{{- range $key := tuple "initContainers" "containers" }}
+{{- if hasKey $resource.spec $key }}
+{{- $containers := get $resource.spec $key }}
+{{- $_ := unset $resource.spec $key }}
+{{- $passthroughRoot := deepCopy $root }}
+{{- $_ := set $passthroughRoot "_containers" $containers }}
+
+{{- $renderedContainers := (include "helm-generic.pod-containers" $passthroughRoot | fromYaml).containers }}
+{{- $_ := set $resource.spec $key $renderedContainers }}
 {{- end }}
+{{- end }}
+
+spec:
+  {{- $resource.spec | toYaml | nindent 2 }}
 {{- end -}}
-
-{{- toYaml $spec }}
-{{- end }}
